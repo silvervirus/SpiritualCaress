@@ -1,0 +1,11 @@
+body {
+    transition: background-color 0.8s ease;
+    font-family: 'Georgia', serif;
+    margin: 0;
+    padding: 20px;
+}
+#container { max-width: 600px; margin: auto; }
+.sepia { background-color: #f7ead4; color: #4a3a2a; }
+.day { background-color: #ffffff; color: #1a1a1a; }
+.night { background-color: #121212; color: #d1d1d1; }
+button { cursor: pointer; padding: 10px; margin: 5px; }
