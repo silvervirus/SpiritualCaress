@@ -1,34 +1,56 @@
-// Function to change theme
-function setTheme(theme) {
-    document.body.className = theme;
+let currentZip = null;
+let chapterFiles = [];
+const readerDiv = document.getElementById('reader');
+const select = document.getElementById('chapterSelect');
+
+function setTheme(theme) { 
+    // Remove any existing theme classes first
+    document.body.classList.remove('day', 'sepia', 'night');
+    // Add the new one
+    document.body.classList.add(theme);
+    localStorage.setItem('theme', theme);
 }
 
-// Logic to handle EPUB file reading
-document.getElementById('fileInput').addEventListener('change', function(e) {
+// Load saved theme
+document.body.className = localStorage.getItem('theme') || 'sepia';
+
+document.getElementById('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    const readerDiv = document.getElementById('reader');
-
-    reader.onload = function(e) {
-        JSZip.loadAsync(e.target.result).then(function(zip) {
-            // Find the first HTML/XHTML file in the EPUB
-            const files = Object.keys(zip.files).filter(f => f.endsWith('.html') || f.endsWith('.xhtml'));
-            
-            if (files.length > 0) {
-                zip.file(files[0]).async("string").then(function(text) {
-                    // Display the content
-                    readerDiv.innerHTML = text;
-                });
-            } else {
-                readerDiv.innerHTML = "No se pudo encontrar contenido legible.";
-            }
-        }).catch(function(err) {
-            readerDiv.innerHTML = "Error al procesar el archivo.";
-            console.error(err);
-        });
-    };
-
-    reader.readAsArrayBuffer(file);
+    currentZip = await JSZip.loadAsync(await file.arrayBuffer());
+    chapterFiles = Object.keys(currentZip.files)
+        .filter(f => f.endsWith('.html') || f.endsWith('.xhtml'))
+        .sort();
+    
+    select.innerHTML = '';
+    chapterFiles.forEach((f, i) => {
+        let opt = document.createElement('option');
+        opt.value = i; opt.innerHTML = f.split('/').pop();
+        select.appendChild(opt);
+    });
+    loadChapter(0);
 });
+
+async function loadChapter(index) {
+    if (index < 0 || index >= chapterFiles.length) return;
+    select.value = index;
+    const text = await currentZip.file(chapterFiles[index]).async("string");
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    
+    // Resolve images
+    for (let img of doc.querySelectorAll('img, image')) {
+        let src = img.getAttribute('src') || img.getAttribute('xlink:href');
+        if (!src) continue;
+        let name = src.split('/').pop().split('#')[0];
+        let path = Object.keys(currentZip.files).find(f => f.endsWith('/' + name) || f === name);
+        if (path) img.setAttribute(img.hasAttribute('src') ? 'src' : 'xlink:href', URL.createObjectURL(await currentZip.file(path).async("blob")));
+    }
+    
+    readerDiv.innerHTML = "";
+    readerDiv.appendChild(doc.body);
+    readerDiv.scrollTop = 0;
+}
+
+select.addEventListener('change', (e) => loadChapter(e.target.value));
+document.getElementById('prevBtn').addEventListener('click', () => loadChapter(parseInt(select.value) - 1));
+document.getElementById('nextBtn').addEventListener('click', () => loadChapter(parseInt(select.value) + 1));

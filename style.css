@@ -1,11 +1,68 @@
-body {
-    transition: background-color 0.8s ease;
-    font-family: 'Georgia', serif;
-    margin: 0;
-    padding: 20px;
+    /* Base Page Styling */
+    body {
+        font-family: 'Georgia', serif;
+        margin: 20px auto;
+        max-width: 900px;
+        padding: 20px;
+    }
+
+    /* The Box Class - creates your outline */
+    .box {
+        border: 2px solid black;
+        padding: 20px;
+        margin-bottom: 20px;
+        background-color: inherit;
+    }
+.theme-box {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* Adds space between the icon, title, and buttons */
+    padding: 15px;
 }
-#container { max-width: 600px; margin: auto; }
-.sepia { background-color: #f7ead4; color: #4a3a2a; }
-.day { background-color: #ffffff; color: #1a1a1a; }
-.night { background-color: #121212; color: #d1d1d1; }
-button { cursor: pointer; padding: 10px; margin: 5px; }
+
+.app-icon {
+    width: 300px; /* Adjust size */
+    height: 300px;
+    object-fit: contain;
+}
+
+/* Optional: Pushes the buttons to the right */
+.toolbar {
+    display: flex;
+    flex-direction: column; /* This forces elements to stack vertically */
+    align-items: flex-start; /* Aligns them to the left */
+    gap: 10px; /* Adds space between the file input and the button group */
+}
+
+/* Ensure the theme buttons group stays together */
+.theme-buttons {
+    display: flex;
+    gap: 5px; /* Adds space between Day, Sepia, and Night buttons */
+}
+    /* FORCE-RESET: This overrides internal book styles */
+    .day #reader * { color: #000 !important; background-color: transparent !important; }
+    .sepia #reader * { color: #5b4636 !important; background-color: transparent !important; }
+    .night #reader * { color: #ccc !important; background-color: transparent !important; }
+
+.day { background-color: #f0f0f0; }
+.day .box { background-color: #ffffff; color: #000000; }
+
+/* Theme - Sepia */
+.sepia { background-color: #dcd0b8; }
+.sepia .box { background-color: #f4ecd8; color: #5b4636; }
+
+/* Theme - Night */
+.night { background-color: #222222; }
+.night .box { background-color: #1a1a1a; color: #cccccc; }
+
+    /* Layout adjustments */
+    .theme-box { display: flex; justify-content: space-between; align-items: center; }
+    .reader-container { 
+    min-height: 500px; 
+    max-height: 60vh;   /* This limits the box height so it doesn't grow forever */
+    overflow-y: auto;   /* This adds the scroll bar automatically */
+}
+    .nav-buttons { display: flex; justify-content: space-between; align-items: center; }
+
+    /* Ensure internal elements behave */
+    button { cursor: pointer; padding: 5px 10px; }
