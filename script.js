@@ -1,34 +1,32 @@
-// Function to change the visual theme
+// Function to change theme
 function setTheme(theme) {
     document.body.className = theme;
 }
 
-// Function to handle the file upload and "diving" into the book
+// Logic to handle EPUB file reading
 document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     const reader = new FileReader();
+    const readerDiv = document.getElementById('reader');
 
     reader.onload = function(e) {
-        // Use JSZip to open the file locally in your phone's memory
         JSZip.loadAsync(e.target.result).then(function(zip) {
-            
-            // Find all files that end in .html or .xhtml
+            // Find the first HTML/XHTML file in the EPUB
             const files = Object.keys(zip.files).filter(f => f.endsWith('.html') || f.endsWith('.xhtml'));
             
-            // Pick the first file found (usually the first chapter) and convert to text
             if (files.length > 0) {
                 zip.file(files[0]).async("string").then(function(text) {
-                    // Update the display with the book content
-                    document.getElementById('reader').innerHTML = text;
+                    // Display the content
+                    readerDiv.innerHTML = text;
                 });
             } else {
-                document.getElementById('reader').innerHTML = "No se pudo encontrar contenido en este archivo.";
+                readerDiv.innerHTML = "No se pudo encontrar contenido legible.";
             }
         }).catch(function(err) {
-            console.error("Error al abrir el EPUB:", err);
-            document.getElementById('reader').innerHTML = "Error al abrir el archivo.";
+            readerDiv.innerHTML = "Error al procesar el archivo.";
+            console.error(err);
         });
     };
 
