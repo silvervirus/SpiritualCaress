@@ -17,7 +17,20 @@ async function getAudioBlob(chunkText) {
     if (!response.ok) throw new Error('TTS Server Error');
     return URL.createObjectURL(await response.blob());
 }
+function setTheme(theme) { 
+    // Remove all possible theme classes
+    document.body.classList.remove('day', 'sepia', 'night');
+    // Add the new one
+    document.body.classList.add(theme);
+    // Save preference
+    localStorage.setItem('theme', theme);
+}
 
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme') || 'sepia';
+    setTheme(savedTheme);
+});
 function splitTextIntoChunks(text, limit = 800) {
     const chunks = [];
     while (text.length > limit) {
