@@ -139,3 +139,6 @@ async function loadChapter(index) {
 select.addEventListener('change', (e) => loadChapter(e.target.value));
 document.getElementById('prevBtn').addEventListener('click', () => loadChapter(parseInt(select.value) - 1));
 document.getElementById('nextBtn').addEventListener('click', () => loadChapter(parseInt(select.value) + 1));
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}

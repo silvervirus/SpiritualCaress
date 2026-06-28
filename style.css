@@ -39,14 +39,10 @@
     display: flex;
     gap: 5px; /* Adds space between Day, Sepia, and Night buttons */
 }
-   body.day { background-color: #f0f0f0 !important; }
-body.day .box { background-color: #ffffff !important; color: #000000 !important; }
-
-body.sepia { background-color: #dcd0b8 !important; }
-body.sepia .box { background-color: #f4ecd8 !important; color: #5b4636 !important; }
-
-body.night { background-color: #222222 !important; }
-body.night .box { background-color: #1a1a1a !important; color: #cccccc !important; }
+    /* FORCE-RESET: This overrides internal book styles */
+    .day #reader * { color: #000 !important; background-color: transparent !important; }
+    .sepia #reader * { color: #5b4636 !important; background-color: transparent !important; }
+    .night #reader * { color: #ccc !important; background-color: transparent !important; }
 
 .day { background-color: #f0f0f0; }
 .day .box { background-color: #ffffff; color: #000000; }
