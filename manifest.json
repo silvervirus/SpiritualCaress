@@ -1,13 +1,14 @@
 {
   "name": "Spiritual Caress",
   "short_name": "S-Caress",
-  "start_url": "/index.html",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#dcd0b8",
   "theme_color": "#5b4636",
   "icons": [
     {
-      "src": "WIcon.png",
+      "src": "./WIcon.png",
       "sizes": "192x192",
       "type": "image/png"
     }
