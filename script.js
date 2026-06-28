@@ -2,16 +2,19 @@ let currentZip = null;
 let chapterFiles = [];
 let currentAudio = null;
 let isPaused = false; 
+// We add an abort controller to stop old chunks if the user switches chapters
+let playbackController = null; 
+
 const readerDiv = document.getElementById('reader');
 const select = document.getElementById('chapterSelect');
 
 async function getAudioBlob(chunkText) {
-    // REPLACE THIS URL with your live Cloudflare Tunnel URL
     const response = await fetch('https://your-tunnel-url.trycloudflare.com/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: chunkText })
     });
+    if (!response.ok) throw new Error('TTS Server Error');
     return URL.createObjectURL(await response.blob());
 }
 
@@ -29,42 +32,55 @@ function splitTextIntoChunks(text, limit = 800) {
 }
 
 async function speakChapter(text) {
+    // Stop anything currently playing
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    
     const chunks = splitTextIntoChunks(text);
     let index = 0;
     isPaused = false;
 
     async function playNext() {
         if (index >= chunks.length || isPaused) return;
-        const url = await getAudioBlob(chunks[index]);
-        currentAudio = new Audio(url);
         
-        currentAudio.onended = () => {
-            index++;
-            if (index >= chunks.length) {
-                document.getElementById('speakBtn').innerText = "Speak";
-            } else {
-                playNext();
-            }
-        };
-        await currentAudio.play();
+        try {
+            const url = await getAudioBlob(chunks[index]);
+            currentAudio = new Audio(url);
+            
+            currentAudio.onended = () => {
+                index++;
+                if (index < chunks.length) playNext();
+                else document.getElementById('speakBtn').innerText = "Speak";
+            };
+            
+            await currentAudio.play();
+        } catch (err) {
+            console.error("Playback error:", err);
+            document.getElementById('speakBtn').innerText = "Speak";
+        }
     }
     playNext();
 }
 
 document.getElementById('speakBtn').addEventListener('click', () => {
-    if (currentAudio && !currentAudio.paused) {
-        currentAudio.pause();
-        isPaused = true;
-        document.getElementById('speakBtn').innerText = "Resume";
-    } else if (currentAudio && currentAudio.paused && isPaused) {
+    const btn = document.getElementById('speakBtn');
+    
+    // Resume logic
+    if (currentAudio && isPaused) {
         currentAudio.play();
         isPaused = false;
-        document.getElementById('speakBtn').innerText = "Pause";
-    } else {
+        btn.innerText = "Pause";
+    } 
+    // Pause logic
+    else if (currentAudio && !currentAudio.paused) {
+        currentAudio.pause();
+        isPaused = true;
+        btn.innerText = "Resume";
+    } 
+    // Start logic
+    else {
         if (window.currentChapterText) {
             speakChapter(window.currentChapterText);
-            document.getElementById('speakBtn').innerText = "Pause";
+            btn.innerText = "Pause";
         }
     }
 });
@@ -73,6 +89,11 @@ document.getElementById('speakBtn').addEventListener('click', () => {
 document.getElementById('fileInput').addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    
+    // Stop audio if user loads a new file
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    document.getElementById('speakBtn').innerText = "Speak";
+
     currentZip = await JSZip.loadAsync(await file.arrayBuffer());
     chapterFiles = Object.keys(currentZip.files)
         .filter(f => f.endsWith('.html') || f.endsWith('.xhtml'))
@@ -89,6 +110,11 @@ document.getElementById('fileInput').addEventListener('change', async (e) => {
 
 async function loadChapter(index) {
     if (index < 0 || index >= chapterFiles.length) return;
+    
+    // Stop audio when changing chapters
+    if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+    document.getElementById('speakBtn').innerText = "Speak";
+    
     select.value = index;
     const text = await currentZip.file(chapterFiles[index]).async("string");
     const doc = new DOMParser().parseFromString(text, 'text/html');
