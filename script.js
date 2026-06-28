@@ -1,13 +1,13 @@
 let currentZip = null;
 let chapterFiles = [];
 let currentAudio = null;
-let isPaused = false;
+let isPaused = false; 
 const readerDiv = document.getElementById('reader');
 const select = document.getElementById('chapterSelect');
 
 async function getAudioBlob(chunkText) {
-    // Replace with your current Cloudflare URL
-    const response = await fetch('https://homes-sake-deeply-requests.trycloudflare.com/synthesize', {
+    // REPLACE THIS URL with your live Cloudflare Tunnel URL
+    const response = await fetch('https://your-tunnel-url.trycloudflare.com/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: chunkText })
@@ -38,10 +38,14 @@ async function speakChapter(text) {
         if (index >= chunks.length || isPaused) return;
         const url = await getAudioBlob(chunks[index]);
         currentAudio = new Audio(url);
+        
         currentAudio.onended = () => {
             index++;
-            if (index >= chunks.length) document.getElementById('speakBtn').innerText = "Speak";
-            else playNext();
+            if (index >= chunks.length) {
+                document.getElementById('speakBtn').innerText = "Speak";
+            } else {
+                playNext();
+            }
         };
         await currentAudio.play();
     }
@@ -64,3 +68,35 @@ document.getElementById('speakBtn').addEventListener('click', () => {
         }
     }
 });
+
+// --- EPUB LOAD LOGIC ---
+document.getElementById('fileInput').addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    currentZip = await JSZip.loadAsync(await file.arrayBuffer());
+    chapterFiles = Object.keys(currentZip.files)
+        .filter(f => f.endsWith('.html') || f.endsWith('.xhtml'))
+        .sort();
+    
+    select.innerHTML = '';
+    chapterFiles.forEach((f, i) => {
+        let opt = document.createElement('option');
+        opt.value = i; opt.innerHTML = f.split('/').pop();
+        select.appendChild(opt);
+    });
+    loadChapter(0);
+});
+
+async function loadChapter(index) {
+    if (index < 0 || index >= chapterFiles.length) return;
+    select.value = index;
+    const text = await currentZip.file(chapterFiles[index]).async("string");
+    const doc = new DOMParser().parseFromString(text, 'text/html');
+    window.currentChapterText = doc.body.textContent;
+    readerDiv.innerHTML = "";
+    readerDiv.appendChild(doc.body);
+}
+
+select.addEventListener('change', (e) => loadChapter(e.target.value));
+document.getElementById('prevBtn').addEventListener('click', () => loadChapter(parseInt(select.value) - 1));
+document.getElementById('nextBtn').addEventListener('click', () => loadChapter(parseInt(select.value) + 1));
