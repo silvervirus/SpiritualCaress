@@ -45,35 +45,47 @@ function splitTextIntoChunks(text, limit = 800) {
 }
 
 async function speakChapter(text) {
-    // Stop anything currently playing
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
     
     const chunks = splitTextIntoChunks(text);
     let index = 0;
     isPaused = false;
+    
+    // This cache will hold our next ready-to-play Audio object
+    let nextAudioObject = null;
+
+    // Helper to pre-fetch and return an Audio object
+    async function prepareAudio(idx) {
+        if (idx >= chunks.length) return null;
+        const url = await getAudioBlob(chunks[idx]);
+        const audio = new Audio(url);
+        return audio;
+    }
 
     async function playNext() {
         if (index >= chunks.length || isPaused) return;
         
-        try {
-            const url = await getAudioBlob(chunks[index]);
-            currentAudio = new Audio(url);
-            
-            currentAudio.onended = () => {
-                index++;
-                if (index < chunks.length) playNext();
-                else document.getElementById('speakBtn').innerText = "Speak";
-            };
-            
-            await currentAudio.play();
-        } catch (err) {
-            console.error("Playback error:", err);
-            document.getElementById('speakBtn').innerText = "Speak";
+        // 1. If we don't have a next audio ready, get it now
+        if (!nextAudioObject) {
+            nextAudioObject = await prepareAudio(index);
         }
+
+        currentAudio = nextAudioObject;
+        
+        // 2. Start pre-fetching the *next* one while current plays
+        nextAudioObject = prepareAudio(index + 1);
+
+        currentAudio.onended = () => {
+            index++;
+            if (index < chunks.length) playNext();
+            else document.getElementById('speakBtn').innerText = "Speak";
+        };
+        
+        await currentAudio.play();
     }
+    
     playNext();
 }
-
 document.getElementById('speakBtn').addEventListener('click', () => {
     const btn = document.getElementById('speakBtn');
     
