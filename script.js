@@ -140,5 +140,5 @@ select.addEventListener('change', (e) => loadChapter(e.target.value));
 document.getElementById('prevBtn').addEventListener('click', () => loadChapter(parseInt(select.value) - 1));
 document.getElementById('nextBtn').addEventListener('click', () => loadChapter(parseInt(select.value) + 1));
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+  navigator.serviceWorker.register('/SpiritualCaress/sw.js', { scope: '/SpiritualCaress/' });
 }
