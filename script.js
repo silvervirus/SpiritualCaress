@@ -9,7 +9,7 @@ const readerDiv = document.getElementById('reader');
 const select = document.getElementById('chapterSelect');
 
 async function getAudioBlob(chunkText) {
-    const response = await fetch(' https://forge-lots-columbus-dow.trycloudflare.com/synthesize', {
+    const response = await fetch('https://forge-lots-columbus-dow.trycloudflare.com/synthesize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: chunkText })
