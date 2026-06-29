@@ -1,7 +1,7 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open('reader-store').then((cache) => {
-      return cache.addAll(['/', '/index.html', '/style.css', '/script.js', '/WIcon.png']);
+      return cache.addAll(['/', '/index.html', '/style.css', '/scripts.js', '/WIcon.png']);
     })
   );
 });
