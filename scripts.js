@@ -86,6 +86,8 @@ document.getElementById('speakBtn').addEventListener('click', () => {
     }
 });
 
+// REMOVED SERVICE WORKER REGISTRATION: It causes conflicts with local AI
+// If you need it for offline, register it in index.html ONLY after the AI is stable.
 select.addEventListener('change', (e) => loadChapter(e.target.value));
 document.getElementById('prevBtn').addEventListener('click', () => loadChapter(parseInt(select.value) - 1));
 document.getElementById('nextBtn').addEventListener('click', () => loadChapter(parseInt(select.value) + 1));
